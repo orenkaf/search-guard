@@ -27,6 +27,8 @@ import javax.net.ssl.SSLEngine;
 import javax.net.ssl.SSLParameters;
 import javax.net.ssl.TrustManagerFactory;
 
+import com.floragunn.searchguard.property.PropertyResolver;
+import com.floragunn.searchguard.service.SearchGuardService;
 import org.elasticsearch.common.inject.Inject;
 import org.elasticsearch.common.logging.ESLogger;
 import org.elasticsearch.common.logging.Loggers;
@@ -41,20 +43,25 @@ import com.floragunn.searchguard.util.SecurityUtil;
 
 public class SSLNettyHttpServerTransport extends NettyHttpServerTransport {
 
-    @Inject
-    public SSLNettyHttpServerTransport(final Settings settings, final NetworkService networkService, final BigArrays bigArrays) {
-        super(settings, networkService, bigArrays);
+	private final SearchGuardService searchGuardService;
 
-    }
+    @Inject
+    public SSLNettyHttpServerTransport(final Settings settings, final NetworkService networkService,
+									   final BigArrays bigArrays, final SearchGuardService searchGuardService) {
+        super(settings, networkService, bigArrays);
+		this.searchGuardService = searchGuardService;
+	}
 
     @Override
     public org.elasticsearch.common.netty.channel.ChannelPipelineFactory configureServerChannelPipelineFactory() {
-        return new SSLHttpChannelPipelineFactory(this, this.settings, this.detailedErrorsEnabled);
+        return new SSLHttpChannelPipelineFactory(this, this.settings, this.detailedErrorsEnabled, this.searchGuardService);
     }
 
     protected static class SSLHttpChannelPipelineFactory extends HttpChannelPipelineFactory {
 
         protected final ESLogger log = Loggers.getLogger(this.getClass());
+
+		private final PropertyResolver propertyResolver;
 
         private final String keystoreType;
         private final String keystoreFilePath;
@@ -66,15 +73,16 @@ public class SSLNettyHttpServerTransport extends NettyHttpServerTransport {
         private final String truststorePassword;
 
         public SSLHttpChannelPipelineFactory(final NettyHttpServerTransport transport, final Settings settings,
-                final boolean detailedErrorsEnabled) {
+                final boolean detailedErrorsEnabled, final SearchGuardService searchGuardService) {
             super(transport, detailedErrorsEnabled);
+			this.propertyResolver = searchGuardService.getPropertyResolver();
             keystoreType = settings.get(ConfigConstants.SEARCHGUARD_SSL_TRANSPORT_HTTP_KEYSTORE_TYPE, "JKS");
             keystoreFilePath = settings.get(ConfigConstants.SEARCHGUARD_SSL_TRANSPORT_HTTP_KEYSTORE_FILEPATH, null);
-            keystorePassword = settings.get(ConfigConstants.SEARCHGUARD_SSL_TRANSPORT_HTTP_KEYSTORE_PASSWORD, "changeit");
+            keystorePassword = this.propertyResolver.getProperty(ConfigConstants.SEARCHGUARD_SSL_TRANSPORT_HTTP_KEYSTORE_PASSWORD, "changeit");
             enforceClientAuth = settings.getAsBoolean(ConfigConstants.SEARCHGUARD_SSL_TRANSPORT_HTTP_ENFORCE_CLIENTAUTH, false);
             truststoreType = settings.get(ConfigConstants.SEARCHGUARD_SSL_TRANSPORT_HTTP_TRUSTSTORE_TYPE, "JKS");
             truststoreFilePath = settings.get(ConfigConstants.SEARCHGUARD_SSL_TRANSPORT_HTTP_TRUSTSTORE_FILEPATH, null);
-            truststorePassword = settings.get(ConfigConstants.SEARCHGUARD_SSL_TRANSPORT_HTTP_TRUSTSTORE_PASSWORD, "changeit");
+			truststorePassword = this.propertyResolver.getProperty(ConfigConstants.SEARCHGUARD_SSL_TRANSPORT_HTTP_TRUSTSTORE_PASSWORD, "changeit");
         }
 
         @Override

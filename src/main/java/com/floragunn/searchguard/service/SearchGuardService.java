@@ -26,6 +26,7 @@ import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 
+import com.floragunn.searchguard.property.PropertyResolver;
 import org.apache.commons.io.FileUtils;
 import org.elasticsearch.ElasticsearchException;
 import org.elasticsearch.client.Client;
@@ -72,12 +73,18 @@ public class SearchGuardService extends AbstractLifecycleComponent<SearchGuardSe
 
     private final SessionStore sessionStore;
 
+	private final PropertyResolver propertyResolver;
+
     public Authorizator getAuthorizator() {
         return authorizator;
     }
 
     public AuthenticationBackend getAuthenticationBackend() {
         return authenticationBackend;
+    }
+
+	public PropertyResolver getPropertyResolver() {
+		return propertyResolver;
     }
 
     public HTTPAuthenticator getHttpAuthenticator() {
@@ -96,7 +103,8 @@ public class SearchGuardService extends AbstractLifecycleComponent<SearchGuardSe
     @Inject
     public SearchGuardService(final Settings settings, final RestController restController, final Client client,
             final Authorizator authorizator, final AuthenticationBackend authenticationBackend, final HTTPAuthenticator httpAuthenticator,
-            final SessionStore sessionStore, final AuditListener auditListener, final SearchService searchService) {
+            final SessionStore sessionStore, final AuditListener auditListener, final SearchService searchService,
+			final PropertyResolver propertyResolver) {
         super(settings);
         this.restController = restController;
         this.client = client;
@@ -107,6 +115,7 @@ public class SearchGuardService extends AbstractLifecycleComponent<SearchGuardSe
         this.authorizator = authorizator;
         this.httpAuthenticator = httpAuthenticator;
         this.sessionStore = sessionStore;
+		this.propertyResolver = propertyResolver;
 
         try {
             method = RestController.class.getDeclaredMethod("getHandler", RestRequest.class);

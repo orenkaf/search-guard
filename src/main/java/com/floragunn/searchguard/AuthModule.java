@@ -17,6 +17,8 @@
 
 package com.floragunn.searchguard;
 
+import com.floragunn.searchguard.property.SettingsBasedPropertyResolverImpl;
+import com.floragunn.searchguard.property.PropertyResolver;
 import org.elasticsearch.common.inject.AbstractModule;
 import org.elasticsearch.common.settings.Settings;
 
@@ -57,6 +59,11 @@ public final class AuthModule extends AbstractModule {
         final Class<? extends NonCachingAuthenticationBackend> defaultNonCachingAuthenticationBackend = SettingsBasedAuthenticationBackend.class;
         final Class<? extends HTTPAuthenticator> defaultHTTPAuthenticator = HTTPBasicAuthenticator.class;
         final Class<? extends NonCachingAuthorizator> defaultNonCachingAuthorizator = SettingsBasedAuthorizator.class;
+		final Class<? extends PropertyResolver> defaultPropertyResolver = SettingsBasedPropertyResolverImpl.class;
+
+		final Class<? extends PropertyResolver> propertyResolver = settings.getAsClass(
+			ConfigConstants.SEARCHGUARD_PROPERTY_PROPERTY_RESOLVER_IMPL, defaultPropertyResolver);
+		bind(PropertyResolver.class).to(propertyResolver).asEagerSingleton();
 
         final Class<? extends NonCachingAuthenticationBackend> authenticationBackend = settings.getAsClass(
                 ConfigConstants.SEARCHGUARD_AUTHENTICATION_AUTHENTICATION_BACKEND, defaultNonCachingAuthenticationBackend);

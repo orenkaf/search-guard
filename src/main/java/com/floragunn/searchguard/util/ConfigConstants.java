@@ -89,6 +89,9 @@ public final class ConfigConstants {
     public static final String SEARCHGUARD_SSL_TRANSPORT_NODE_TRUSTSTORE_TYPE = "searchguard.ssl.transport.node.truststore_type";
     public static final String SEARCHGUARD_WAFFLE_WINDOWS_AUTH_PROVIDER_IMPL = "searchguard.waffle.windows_auth_provider_impl";
 
+	public static final String SEARCHGUARD_PROPERTY_PROPERTY_RESOLVER_IMPL = "searchguard.property.property_resolver.impl";
+
+
     private ConfigConstants() {
 
     }
